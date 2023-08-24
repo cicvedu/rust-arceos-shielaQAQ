@@ -1,11 +1,12 @@
 use alloc::{collections::VecDeque, sync::Arc};
 use core::ops::Deref;
-
+use core::sync::atomic::{AtomicIsize, Ordering};
 use crate::BaseScheduler;
 
 /// A task wrapper for the [`SimpleScheduler`].
 pub struct SimpleTask<T> {
     inner: T,
+    time_slice: AtomicIsize,
 }
 
 impl<T> SimpleTask<T> {
@@ -13,7 +14,16 @@ impl<T> SimpleTask<T> {
     pub const fn new(inner: T) -> Self {
         Self {
             inner,
+            time_slice: AtomicIsize::new(0_isize),
         }
+    }
+
+    fn time_slice(&self) -> isize {
+        self.time_slice.load(Ordering::Acquire)
+    }
+
+    fn reset_time_slice(&self) {
+        self.time_slice.store(0_isize, Ordering::Release);
     }
 
     /// Returns a reference to the inner task struct.
@@ -61,12 +71,12 @@ impl<T> BaseScheduler for SimpleScheduler<T> {
     fn init(&mut self) {}
 
     fn add_task(&mut self, task: Self::SchedItem) {
-        trace!("######### add_task");
+        //trace!("######### add_task");
         self.ready_queue.push_back(task);
     }
 
     fn remove_task(&mut self, task: &Self::SchedItem) -> Option<Self::SchedItem> {
-        trace!("######### remove_task");
+        //trace!("######### remove_task");
         self.ready_queue
             .iter()
             .position(|t| Arc::ptr_eq(t, task))
@@ -78,11 +88,17 @@ impl<T> BaseScheduler for SimpleScheduler<T> {
     }
 
     fn put_prev_task(&mut self, prev: Self::SchedItem, _preempt: bool) {
-        self.ready_queue.push_back(prev);
+        if prev.time_slice() > 0 && _preempt {
+            self.ready_queue.push_front(prev)
+        } else {
+            prev.reset_time_slice();
+            self.ready_queue.push_back(prev)
+        }
     }
 
     fn task_tick(&mut self, _current: &Self::SchedItem) -> bool {
-        false // no reschedule
+        let old_slice = _current.time_slice.fetch_sub(1, Ordering::Release);
+        old_slice <= 1
     }
 
     fn set_priority(&mut self, _task: &Self::SchedItem, _prio: isize) -> bool {
