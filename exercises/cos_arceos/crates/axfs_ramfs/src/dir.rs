@@ -5,8 +5,8 @@ use alloc::{string::String, vec::Vec};
 use axfs_vfs::{VfsDirEntry, VfsNodeAttr, VfsNodeOps, VfsNodeRef, VfsNodeType};
 use axfs_vfs::{VfsError, VfsResult};
 use spin::RwLock;
-
 use crate::file::FileNode;
+
 
 /// The directory node in the RAM filesystem.
 ///
@@ -165,11 +165,21 @@ impl VfsNodeOps for DirNode {
         }
     }
 
-    fn rename(&self, _src: &str, _dst: &str) -> VfsResult {
-        todo!("Implement rename for ramfs!");
+    fn rename(&self, src: &str, dst: &str) -> VfsResult {
+        //todo!("Implement rename for ramfs!");
+        let (src_name, _) = split_path(src);
+        let (dst_name, _) = split_path(dst);
+        
+        // Acquire a write lock on children
+        let mut children = self.children.write();
+        
+        if let Some(file_node) = children.remove(src_name) {
+            children.insert(dst_name.into(), file_node);
+            Ok(())
+        } else {
+            Err(VfsError::NotFound)
+        }
     }
-
-    axfs_vfs::impl_vfs_dir_default! {}
 }
 
 fn split_path(path: &str) -> (&str, Option<&str>) {
@@ -178,3 +188,27 @@ fn split_path(path: &str) -> (&str, Option<&str>) {
         (&trimmed_path[..n], Some(&trimmed_path[n + 1..]))
     })
 }
+
+
+        // let (src_name, _) = split_path(src);
+        // let (dst_name, _) = split_path(dst);
+    
+        // if let Some(file_node) = self.children.write().remove(src_name) {
+        //     self.children.write().insert(dst_name.into(), file_node);
+        //     Ok(())
+        // } else {
+        //     Err(VfsError::NotFound)
+        // }
+
+        // let (src_name, _) = split_path(src);
+        // let (dst_name, _) = split_path(dst);
+    
+        // // Acquire a write lock on children
+        // let mut children = self.children.write();
+    
+        // if let Some(file_node) = children.remove(src_name) {
+        //     children.insert(dst_name.into(), file_node);
+        //     Ok(())
+        // } else {
+        //     Err(VfsError::NotFound)
+        // }
