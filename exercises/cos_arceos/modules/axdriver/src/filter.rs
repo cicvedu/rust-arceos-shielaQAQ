@@ -67,33 +67,26 @@ impl<T: NetDriverOps> NetDriverOps for NetFilter<T> {
     }
 
     fn recycle_tx_buffers(&mut self) -> DevResult {
-        //let result = self.inner.recycle_tx_buffers();
-        self.inner.recycle_tx_buffers()
+        let result = self.inner.recycle_tx_buffers();
+        //self.inner.recycle_tx_buffers();
         // if result.is_ok() {
         //     warn!("Recycled transmit buffers");
         // } else {
         //     warn!("Failed to recycle transmit buffers: {:?}", result);
         // }
-
-        // result
+        //warn!("Filter: transmit len [{}]", &result.unwrap().packet_len());
+        result
     }
 
     fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
-        warn!("Filter: transmit len [{}]", &tx_buf.packet_len());
+        
         //warn!("Filter: transmit len [{}]", packet_len(&tx_buf));
         //let result2 = tx_buf.clone();
-        let result = self.inner.transmit(tx_buf);
         
-        //warn!("Filter: transmit len [{}]", result2.packet_len());
-        // match &result {
-        //     Ok(tx_buf) => {
-        //         warn!("Filter: transmit len [{}]", tx_buf.packet_len());
-        //     },
-        //     Err(err) => {
-        //         warn!("No transmit packets");
-        //     }
-        // }
-        result
+        warn!("Filter: transmit len [{}]", &tx_buf.packet_len());
+        //let result = self.inner.transmit(tx_buf);
+        self.inner.transmit(tx_buf)
+        //result
     }
 
     // fn receive(&mut self) -> DevResult<NetBufPtr> {
@@ -114,7 +107,7 @@ impl<T: NetDriverOps> NetDriverOps for NetFilter<T> {
     //     receive_result
     // }
     fn receive(&mut self) -> DevResult<NetBufPtr> {
-        let mut receive_result = self.inner.receive();
+        let receive_result = self.inner.receive();
         //let receive_result2 = self.inner.receive();
         //warn!("Filter: receive len [{:?}]", packet_len(&receive_result.unwrap()));
         // match &receive_result {
