@@ -55,13 +55,14 @@ impl<T: NetDriverOps> NetDriverOps for NetFilter<T> {
 
     fn recycle_rx_buffer(&mut self, rx_buf: NetBufPtr) -> DevResult {
         //let result = self.inner.recycle_rx_buffer(rx_buf);
+        warn!("Filter: receive len [{:?}]", rx_buf.packet_len());
         self.inner.recycle_rx_buffer(rx_buf)
         // if result.is_ok() {
         //     warn!("Recycled receive buffer");
         // } else {
         //     warn!("Failed to recycle receive buffer: {:?}", result);
         // }
-
+        
         // result
     }
 
@@ -78,10 +79,20 @@ impl<T: NetDriverOps> NetDriverOps for NetFilter<T> {
     }
 
     fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
-        warn!("Filter: transmit len [{}]", tx_buf.packet_len());
+        warn!("Filter: transmit len [{}]", &tx_buf.packet_len());
+        //warn!("Filter: transmit len [{}]", packet_len(&tx_buf));
+        //let result2 = tx_buf.clone();
         let result = self.inner.transmit(tx_buf);
-        //warn!("Transmit packet with length: {}", result.packet_len());
         
+        //warn!("Filter: transmit len [{}]", result2.packet_len());
+        // match &result {
+        //     Ok(tx_buf) => {
+        //         warn!("Filter: transmit len [{}]", tx_buf.packet_len());
+        //     },
+        //     Err(err) => {
+        //         warn!("No transmit packets");
+        //     }
+        // }
         result
     }
 
@@ -103,16 +114,17 @@ impl<T: NetDriverOps> NetDriverOps for NetFilter<T> {
     //     receive_result
     // }
     fn receive(&mut self) -> DevResult<NetBufPtr> {
-        let receive_result = self.inner.receive();
-    
-        match &receive_result {
-            Ok(rx_buf) => {
-                warn!("Filter: receive len [{:?}]", rx_buf.packet_len());
-            },
-            Err(err) => {
-                warn!("No incoming packets");
-            }
-        }
+        let mut receive_result = self.inner.receive();
+        //let receive_result2 = self.inner.receive();
+        //warn!("Filter: receive len [{:?}]", packet_len(&receive_result.unwrap()));
+        // match &receive_result {
+        //     Ok(rx_buf) => {
+        //         warn!("Filter: receive len [{:?}]", &rx_buf.packet_len());
+        //     },
+        //     Err(err) => {
+        //         warn!("No incoming packets");
+        //     }
+        // }
     
         receive_result
     }
