@@ -78,7 +78,7 @@ impl<T: NetDriverOps> NetDriverOps for NetFilter<T> {
     }
 
     fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
-        warn!("Transmit packet with length: {}", tx_buf.packet_len());
+        warn!("Filter: transmit len [{}]", tx_buf.packet_len());
         let result = self.inner.transmit(tx_buf);
         //warn!("Transmit packet with length: {}", result.packet_len());
         
@@ -107,7 +107,7 @@ impl<T: NetDriverOps> NetDriverOps for NetFilter<T> {
     
         match &receive_result {
             Ok(rx_buf) => {
-                warn!("Received packet with length: {}", rx_buf.packet_len());
+                warn!("Filter: receive len [{:?}]", rx_buf.packet_len());
             },
             Err(err) => {
                 warn!("No incoming packets");
